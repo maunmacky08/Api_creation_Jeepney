@@ -86,7 +86,54 @@ def update_route(id):
                 "message": "Route updated successfully",
                 "route": route
             }), 200
+# 5. DELETE ROUTE
+@app.route("/routes/<int:id>", methods=["DELETE"])
+def delete_route(id):
+    for route in routes:
+        if route["route_id"] == id:
+            routes.remove(route)
 
+            return jsonify({
+                "message": "Route deleted successfully",
+                "route_id": id
+            }), 200
+
+    return jsonify({"error": "Route not found"}), 404
+
+
+# CONSUMER / TESTING SCRIPT
+def consumer():
+
+    time.sleep(2)
+
+    results = []
+
+    print("\nJEEPNEY ROUTE FINDER TEST")
+
+    # GET ALL
+    response = requests.get("http://127.0.0.1:5000/routes")
+    results.append(("GET /routes", response.status_code == 200))
+    print("\nGET ALL ROUTES:", response.status_code)
+    print(response.json())
+
+    # GET ONE
+    response = requests.get("http://127.0.0.1:5000/routes/1")
+    results.append(("GET /routes/1", response.status_code == 200))
+    print("\nGET ONE ROUTE:", response.status_code)
+    print(response.json())
+
+    # ADD ROUTE
+    new_route = {
+        "route_number": "25",
+        "origin": "Mabalacat",
+        "destination": "Dau",
+        "fare": 15
+    }
+
+    response = requests.post(
+        "http://127.0.0.1:5000/routes",
+        json=new_route
+    )
     return jsonify({"error": "Route not found"}), 404
     results.append(("POST /routes", response.status_code == 201))
     print("\nADD ROUTE:", response.status_code)
