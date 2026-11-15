@@ -174,3 +174,32 @@ def consumer():
     results.append(("GET /routes/999", response.status_code == 404))
     print("\nERROR TEST:", response.status_code)
     print(response.json())
+
+    # SUMMARY REPORT
+    print("\n========== SUMMARY REPORT ==========")
+
+    for name, result in results:
+        if result:
+            print(name, "- PASSED")
+        else:
+            print(name, "- FAILED")
+
+    passed = sum(result for name, result in results)
+
+    print("\nTotal Tests:", len(results))
+    print("Passed:", passed)
+    print("Failed:", len(results) - passed)
+    print("====================================")
+
+
+# RUN THE APPLICATION
+if _name_ == "_main_":
+
+    threading.Thread(target=consumer, daemon=True).start()
+
+    app.run(
+        host="127.0.0.1",
+        port=5000,
+        debug=False,
+        use_reloader=False
+    )
