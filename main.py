@@ -88,3 +88,42 @@ def update_route(id):
             }), 200
 
     return jsonify({"error": "Route not found"}), 404
+    results.append(("POST /routes", response.status_code == 201))
+    print("\nADD ROUTE:", response.status_code)
+    print(response.json())
+
+    # UPDATE ROUTE
+    if response.status_code == 201:
+        route_id = response.json()["route"]["route_id"]
+
+        updated_route = {
+            "route_number": "25",
+            "origin": "Mabalacat",
+            "destination": "Angeles City",
+            "fare": 18
+        }
+
+        response = requests.put(
+            f"http://127.0.0.1:5000/routes/{route_id}",
+            json=updated_route
+        )
+
+        results.append(("PUT /routes", response.status_code == 200))
+        print("\nUPDATE ROUTE:", response.status_code)
+        print(response.json())
+
+        # DELETE ROUTE
+        response = requests.delete(
+            f"http://127.0.0.1:5000/routes/{route_id}"
+        )
+
+        results.append(("DELETE /routes", response.status_code == 200))
+        print("\nDELETE ROUTE:", response.status_code)
+        print(response.json())
+
+    # ERROR TEST
+    response = requests.get("http://127.0.0.1:5000/routes/999")
+
+    results.append(("GET /routes/999", response.status_code == 404))
+    print("\nERROR TEST:", response.status_code)
+    print(response.json())
