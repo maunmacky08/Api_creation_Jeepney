@@ -134,7 +134,7 @@ def consumer():
         "http://127.0.0.1:5000/routes",
         json=new_route
     )
-    return jsonify({"error": "Route not found"}), 404
+
     results.append(("POST /routes", response.status_code == 201))
     print("\nADD ROUTE:", response.status_code)
     print(response.json())
@@ -193,7 +193,7 @@ def consumer():
 
 
 # RUN THE APPLICATION
-if _name_ == "_main_":
+if __name__ == "__main__":
 
     threading.Thread(target=consumer, daemon=True).start()
 
