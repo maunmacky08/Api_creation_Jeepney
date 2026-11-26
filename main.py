@@ -1,10 +1,9 @@
+
 from flask import Flask, jsonify, request
-import requests
-import threading
-import time
 
 app = Flask(__name__)
-# the jeepney route data
+
+# JEEPNEY ROUTE DATA
 routes = [
     {
         "route_id": 1,
@@ -29,6 +28,7 @@ routes = [
     }
 ]
 
+
 # 1. GET ALL ROUTES
 @app.route("/routes", methods=["GET"])
 def get_routes():
@@ -48,10 +48,18 @@ def get_route(id):
 # 3. ADD NEW ROUTE
 @app.route("/routes", methods=["POST"])
 def add_route():
-    data = request.get_json()
+    data = request.get_json(silent=True)
 
-    if not data:
-        return jsonify({"error": "No data provided"}), 400
+    if not isinstance(data, dict):
+        return jsonify({"error": "Invalid or missing JSON data"}), 400
+
+    required_fields = ["route_number", "origin", "destination", "fare"]
+
+    if not all(field in data for field in required_fields):
+        return jsonify({"error": "Missing required fields"}), 400
+
+    if not isinstance(data["fare"], (int, float)) or isinstance(data["fare"], bool) or data["fare"] < 0:
+        return jsonify({"error": "Invalid fare"}), 400
 
     new_route = {
         "route_id": max([r["route_id"] for r in routes], default=0) + 1,
@@ -72,11 +80,21 @@ def add_route():
 # 4. UPDATE ROUTE
 @app.route("/routes/<int:id>", methods=["PUT"])
 def update_route(id):
-    data = request.get_json()
+    data = request.get_json(silent=True)
+
+    if not isinstance(data, dict):
+        return jsonify({"error": "Invalid or missing JSON data"}), 400
+
+    required_fields = ["route_number", "origin", "destination", "fare"]
+
+    if not all(field in data for field in required_fields):
+        return jsonify({"error": "Missing required fields"}), 400
+
+    if not isinstance(data["fare"], (int, float)) or isinstance(data["fare"], bool) or data["fare"] < 0:
+        return jsonify({"error": "Invalid fare"}), 400
 
     for route in routes:
         if route["route_id"] == id:
-
             route["route_number"] = data["route_number"]
             route["origin"] = data["origin"]
             route["destination"] = data["destination"]
@@ -86,6 +104,10 @@ def update_route(id):
                 "message": "Route updated successfully",
                 "route": route
             }), 200
+
+    return jsonify({"error": "Route not found"}), 404
+
+
 # 5. DELETE ROUTE
 @app.route("/routes/<int:id>", methods=["DELETE"])
 def delete_route(id):
@@ -101,105 +123,10 @@ def delete_route(id):
     return jsonify({"error": "Route not found"}), 404
 
 
-# CONSUMER / TESTING SCRIPT
-def consumer():
-
-    time.sleep(2)
-
-    results = []
-
-    print("\nJEEPNEY ROUTE FINDER TEST")
-
-    # GET ALL
-    response = requests.get("http://127.0.0.1:5000/routes")
-    results.append(("GET /routes", response.status_code == 200))
-    print("\nGET ALL ROUTES:", response.status_code)
-    print(response.json())
-
-    # GET ONE
-    response = requests.get("http://127.0.0.1:5000/routes/1")
-    results.append(("GET /routes/1", response.status_code == 200))
-    print("\nGET ONE ROUTE:", response.status_code)
-    print(response.json())
-
-    # ADD ROUTE
-    new_route = {
-        "route_number": "25",
-        "origin": "Mabalacat",
-        "destination": "Dau",
-        "fare": 15
-    }
-
-    response = requests.post(
-        "http://127.0.0.1:5000/routes",
-        json=new_route
-    )
-
-    results.append(("POST /routes", response.status_code == 201))
-    print("\nADD ROUTE:", response.status_code)
-    print(response.json())
-
-    # UPDATE ROUTE
-    if response.status_code == 201:
-        route_id = response.json()["route"]["route_id"]
-
-        updated_route = {
-            "route_number": "25",
-            "origin": "Mabalacat",
-            "destination": "Angeles City",
-            "fare": 18
-        }
-
-        response = requests.put(
-            f"http://127.0.0.1:5000/routes/{route_id}",
-            json=updated_route
-        )
-
-        results.append(("PUT /routes", response.status_code == 200))
-        print("\nUPDATE ROUTE:", response.status_code)
-        print(response.json())
-
-        # DELETE ROUTE
-        response = requests.delete(
-            f"http://127.0.0.1:5000/routes/{route_id}"
-        )
-
-        results.append(("DELETE /routes", response.status_code == 200))
-        print("\nDELETE ROUTE:", response.status_code)
-        print(response.json())
-
-    # ERROR TEST
-    response = requests.get("http://127.0.0.1:5000/routes/999")
-
-    results.append(("GET /routes/999", response.status_code == 404))
-    print("\nERROR TEST:", response.status_code)
-    print(response.json())
-
-    # SUMMARY REPORT
-    print("\n========== SUMMARY REPORT ==========")
-
-    for name, result in results:
-        if result:
-            print(name, "- PASSED")
-        else:
-            print(name, "- FAILED")
-
-    passed = sum(result for name, result in results)
-
-    print("\nTotal Tests:", len(results))
-    print("Passed:", passed)
-    print("Failed:", len(results) - passed)
-    print("====================================")
-
-
 # RUN THE APPLICATION
 if __name__ == "__main__":
-
-    threading.Thread(target=consumer, daemon=True).start()
-
     app.run(
         host="127.0.0.1",
         port=5000,
-        debug=False,
-        use_reloader=False
+        debug=False
     )
