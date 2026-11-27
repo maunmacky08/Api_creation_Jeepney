@@ -1,79 +1,78 @@
 
 import requests
 
-BASE_URL = "http://127.0.0.1:5000"
+BASE_URL = "http://127.0.0.1:5000/api/teams"
 
 results = []
 
-print("\n========== JEEPNEY ROUTE FINDER CONSUMER ==========")
+print("\n========== MINI TOURNAMENT API CONSUMER ==========")
 
-
-# 1. GET ALL ROUTES
 try:
-    response = requests.get(f"{BASE_URL}/routes")
-    results.append(("GET ALL ROUTES", response.status_code == 200))
+    # 1. GET ALL TEAMS
+    response = requests.get(BASE_URL)
 
-    print("\nGET ALL ROUTES:", response.status_code)
+    results.append(("GET ALL TEAMS", response.status_code == 200))
+
+    print("\nGET ALL TEAMS:", response.status_code)
     print(response.json())
 
-    # 2. GET ONE ROUTE
-    response = requests.get(f"{BASE_URL}/routes/1")
-    results.append(("GET ONE ROUTE", response.status_code == 200))
+    # 2. GET ONE TEAM
+    response = requests.get(f"{BASE_URL}/1")
 
-    print("\nGET ONE ROUTE:", response.status_code)
+    results.append(("GET ONE TEAM", response.status_code == 200))
+
+    print("\nGET ONE TEAM:", response.status_code)
     print(response.json())
 
-    # 3. ADD NEW ROUTE
-    new_route = {
-        "route_number": "25",
-        "origin": "Mabalacat",
-        "destination": "Dau",
-        "fare": 15
+    # 3. CREATE NEW TEAM
+    new_team = {
+        "team_name": "Yellow Tigers",
+        "wins": 0,
+        "losses": 0
     }
 
     response = requests.post(
-        f"{BASE_URL}/routes",
-        json=new_route
+        BASE_URL,
+        json=new_team
     )
 
-    results.append(("ADD ROUTE", response.status_code == 201))
+    results.append(("CREATE TEAM", response.status_code == 201))
 
-    print("\nADD ROUTE:", response.status_code)
+    print("\nCREATE TEAM:", response.status_code)
     print(response.json())
 
-    # 4. UPDATE ROUTE
+    # 4. UPDATE TEAM
     if response.status_code == 201:
-        route_id = response.json()["route"]["route_id"]
+        team_id = response.json()["team_id"]
 
-        updated_route = {
-            "route_number": "25",
-            "origin": "Mabalacat",
-            "destination": "Angeles City",
-            "fare": 18
+        updated_team = {
+            "team_name": "Yellow Tigers",
+            "wins": 2,
+            "losses": 1
         }
 
         response = requests.put(
-            f"{BASE_URL}/routes/{route_id}",
-            json=updated_route
+            f"{BASE_URL}/{team_id}",
+            json=updated_team
         )
 
-        results.append(("UPDATE ROUTE", response.status_code == 200))
+        results.append(("UPDATE TEAM", response.status_code == 200))
 
-        print("\nUPDATE ROUTE:", response.status_code)
+        print("\nUPDATE TEAM:", response.status_code)
         print(response.json())
 
-        # 5. DELETE ROUTE
+        # 5. DELETE TEAM
         response = requests.delete(
-            f"{BASE_URL}/routes/{route_id}"
+            f"{BASE_URL}/{team_id}"
         )
 
-        results.append(("DELETE ROUTE", response.status_code == 200))
+        results.append(("DELETE TEAM", response.status_code == 200))
 
-        print("\nDELETE ROUTE:", response.status_code)
+        print("\nDELETE TEAM:", response.status_code)
         print(response.json())
 
-    # ERROR TEST
-    response = requests.get(f"{BASE_URL}/routes/999")
+    # 6. ERROR TEST
+    response = requests.get(f"{BASE_URL}/999")
 
     results.append(("ERROR TEST", response.status_code == 404))
 
@@ -82,8 +81,8 @@ try:
 
 
 except requests.exceptions.ConnectionError:
-    print("\nERROR: Cannot connect to the API.")
-    print("Make sure main.py is running first.")
+    print("\nERROR: Cannot connect to the partner API.")
+    print("Make sure your partner's Flask API is running.")
 
 except requests.exceptions.RequestException as error:
     print("\nREQUEST ERROR:", error)
